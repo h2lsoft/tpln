@@ -22,5 +22,8 @@ Installation :
     - Edit file TPLN/TPLN_cfg.php
 
 
-Official website, online examples, forum and documentation => http://tpln.h2lsoft.com
+Official website, online examples, forum and documentation
+----------------------------------------------------------
+
+    http://tpln.h2lsoft.com
 
