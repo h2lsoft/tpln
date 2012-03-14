@@ -6,6 +6,7 @@ The PHP code is separated of your design what facilitates the update of the desi
 to permit to separate work between webdesigner and PHP coder your work is built faster and it is easier to update !
 
 Hot Features :
+--------------
 
     -  Easy to learn
     -  Open source project
@@ -15,6 +16,7 @@ Hot Features :
 
 
 Installation :
+--------------
 
     - Copy TPLN dir in your project
     - Edit file TPLN/TPLN_cfg.php
