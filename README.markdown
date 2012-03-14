@@ -14,7 +14,11 @@ Hot Features :
     -  Full Documentation, Friendly Community, ...
 
 
-Official website and documentation :
+Installation :
 
-http://tpln.h2lsoft.com
+    - Copy TPLN dir in your project
+    - Edit file TPLN/TPLN_cfg.php
+
+
+Official website, online examples, forum and documentation => http://tpln.h2lsoft.com
 
