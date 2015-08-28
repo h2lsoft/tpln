@@ -15,13 +15,110 @@ if(TPLN_DBUG_CLASS)include_once('dBug.php');
 include_once('lang/error_'.TPLN_LANG.'.inc.php'); // language file
 include_once('plugin/form/lang.inc.php'); // form language file
 
+/******************* AUTO SECURITY *******************************************/
+function tpln_auto_security($value, $urldecode_before=false, $sanitize=true, $strip_tags_allowed='')
+{
+	if(is_array($value))
+	{
+		foreach($value as $key => $val)
+			$value[$key] = tpln_auto_security($val, $urldecode_before, $sanitize, $strip_tags_allowed);
+		return $value;
+	}
+
+	if($urldecode_before) $value = urldecode($value);
+
+    // no comment
+    $value = str_ireplace(array('<!--', '-->'), '', $value);
+
+
+
+    // tpln code
+    $value = str_ireplace('{#', '{ #', $value);
+    $value = str_ireplace('{_', '{ _', $value);
+    $value = str_ireplace('{$', '{ $', $value);
+
+	// remove invisble characters
+	$non_displayables = array();
+	if($urldecode_before)
+	{
+		$non_displayables[] = '/%0[0-8bcef]/';	// url encoded 00-08, 11, 12, 14, 15
+		$non_displayables[] = '/%1[0-9a-f]/';	// url encoded 16-31
+	}
+	$non_displayables[] = '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]+/S';	// 00-08, 11, 12, 14-31, 127
+
+	do{
+			$value = preg_replace($non_displayables, '', $value, -1, $count);
+	}
+	while($count);
+
+
+	// naughty scripting
+	$value = preg_replace('#(alert|cmd|passthru|eval|shell_exec|exec|expression|system|fopen|fsockopen|file|file_get_contents|readfile|unlink)(\s*)\((.*?)\)#si',
+					'\\1\\2&#40;\\3&#41;',
+					$value);
+
+	// never allowed
+	$_never_allowed_str =	array('document.cookie', 'document.write', '.parentNode', '.innerHTML', 'window.location', '-moz-binding');
+	$value = str_replace($_never_allowed_str, '[REMOVED]', $value);
+
+	$_never_allowed_regex = array('javascript\s*:', 'expression\s*(\(|&\#40;)', 'vbscript\s*:', 'Redirect\s+302', "([\"'])?data\s*:[^\\1]*?base64[^\\1]*?,[^\\1]*?\\1?");
+	foreach($_never_allowed_regex as $reg)
+		$value = preg_replace('#'.$reg.'#is', '[removed]', $value);
+
+	// JSON
+	if(!$urldecode_before && strlen($value) >= 2 && $value[0] == '[' && $value[strlen($value)-1] == ']')
+	{
+		$sanitize = false;
+		$strip_tags_allowed = '';
+	}
+
+	if($sanitize)$value = trim(filter_var($value, FILTER_SANITIZE_STRING));
+	$value = strip_tags($value, $strip_tags_allowed);
+
+
+	// remove php code
+	$value = preg_replace('/(<\?{1}[p\s]{1}.+\?>)/i', '', $value);
+	$value = str_ireplace(array('<?php', '<%', '<?=', '<?', '?>'), '', $value);
+
+	// remove xss
+	$value = str_ireplace(array("&lt;", "&gt;"), array("&amp;lt;", "&amp;gt;"), $value);
+	$value = preg_replace('#(&\#*\w+)[\s\r\n]+;#U', "$1;", $value);
+	$value = preg_replace('#(<[^>]+[\s\r\n\"\'])(on|xmlns)[^>]*>#iU', "$1>", $value);
+	$value = preg_replace('#(<[^>]+[\s\r\n\"\'])(on|xmlns)[^>]*>#iU', "$1>", $value);
+	$value = preg_replace('#([a-z]*)[\s\r\n]*=[\s\n\r]*([\`\'\"]*)[\\s\n\r]*j[\s\n\r]*a[\s\n\r]*v[\s\n\r]*a[\s\n\r]*s[\s\n\r]*c[\s\n\r]*r[\s\n\r]*i[\s\n\r]*p[\s\n\r]*t[\s\n\r]*:#iU', '$1=$2nojavascript...', $value);
+	$value = preg_replace('#([a-z]*)[\s\r\n]*=([\'\"]*)[\s\n\r]*v[\s\n\r]*b[\s\n\r]*s[\s\n\r]*c[\s\n\r]*r[\s\n\r]*i[\s\n\r]*p[\s\n\r]*t[\s\n\r]*:#iU', '$1=$2novbscript...', $value);
+	$value = preg_replace('#(<[^>]+)style[\s\r\n]*=[\s\r\n]*([\`\'\"]*).*expression[\s\r\n]*\([^>]*>#iU', "$1>", $value);
+	$value = preg_replace('#(<[^>]+)style[\s\r\n]*=[\s\r\n]*([\`\'\"]*).*s[\s\n\r]*c[\s\n\r]*r[\s\n\r]*i[\s\n\r]*p[\s\n\r]*t[\s\n\r]*:*[^>]*>#iU', "$1>", $value);
+	$value = preg_replace('#</*\w+:\w[^>]*>#i', "", $value);
+	do
+	{
+		$oldstring = $value;
+		$value = preg_replace('#</*(style|script|embed|object|iframe|frame|frameset|ilayer|layer|bgsound|title|base)[^>]*>#i', "", $value);
+	}
+	while ($oldstring != $value);
+
+	$value = trim($value);
+	return $value;
+}
+
+
+if(!defined('TPLN_AUTO_SECURITY_GET') || TPLN_AUTO_SECURITY_GET == 1)$_GET = tpln_auto_security($_GET, true, true);
+if(!defined('TPLN_AUTO_SECURITY_POST') || TPLN_AUTO_SECURITY_POST == 1)$_POST = tpln_auto_security($_POST, false, false, '<h1><h2><h3><h4><h5><h6><a><img><img/><ul><ol><li><caption><p><br><br /><div><span><table><th><tr><td><thead><tfoot><cite><blockquote><pre><abbr><address><hr><audio><video><fieldset><label><map><area><article><code><col><colgroup><dd><dl><dt><kbd><var><strong><b><em><i><samp><pre><source><sub><article><section><small><mark><figcaption><figure><track><source><span><summary>');
+if(!defined('TPLN_AUTO_SECURITY_COOKIE') || TPLN_AUTO_SECURITY_COOKIE == 1)$_COOKIE = tpln_auto_security($_COOKIE, true, true);
+
+/******************* /AUTO SECURITY *******************************************/
+
+
+
+
+
 /******************* Plugins structure *******************************************
 - TPLN
-	|- DB
-			|- Form
-					|- Mail
-							|- Rss
-************************************************************************************/
+|- DB
+|- Form
+|- Mail
+|- Rss
+ ************************************************************************************/
 include_once('plugin/image/image.class.php');
 include_once('plugin/rss/rss.class.php');
 include_once('plugin/mail/mail.class.php');
@@ -30,38 +127,38 @@ include_once('plugin/db/db.class.php');
 
 /******************* File structure **********************************************
 
-	f - f_no - name                - string     // file name
-			 - cache_name          - string     // file name for cache
-			- buffer               - string     // file content
-			- items                - array      // items in file
-			- constant_items	   - array		// constants in file
-			- php_items            - array      // php items in file (begin with $)
-			- cmd_items            - array      // include items
-			- create_cached_file   - bool       // file from cache
-			- time_started         - long int   // chrono start
-			- cache_expire         - bool       // cache exporation
-			- execution_time       - long int   // time execution
-			- chrono_started       - long int   // chrono started
+f - f_no - name                - string     // file name
+- cache_name          - string     // file name for cache
+- buffer               - string     // file content
+- items                - array      // items in file
+- constant_items	   - array		// constants in file
+- php_items            - array      // php items in file (begin with $)
+- cmd_items            - array      // include items
+- create_cached_file   - bool       // file from cache
+- time_started         - long int   // chrono start
+- cache_expire         - bool       // cache exporation
+- execution_time       - long int   // time execution
+- chrono_started       - long int   // chrono started
 
-	- shortcut_blocs        - array
-		|_ all              - array      // all bloc names
-		|_ used             - array      // all bloc used
-		|_ name             - none
-		|_ items       		- array      // bloc items
+- shortcut_blocs        - array
+|_ all              - array      // all bloc names
+|_ used             - array      // all bloc used
+|_ name             - none
+|_ items       		- array      // bloc items
 
-	- def_blocs            - array
+- def_blocs            - array
 
-*/
+ */
 
 /******************* Bloc Structure ***************************************
 
-	def_blocs - name          - string
-		|_ structure          - string
-		|_ parsed             - array
-		|_ is_looped          - boolean
-		|_ children           - array
+def_blocs - name          - string
+|_ structure          - string
+|_ parsed             - array
+|_ is_looped          - boolean
+|_ children           - array
 
-**************************************************************************************/
+ **************************************************************************************/
 class TPLN extends DB
 {
 	protected $def_tpl = array(); // templates list defined with a name
@@ -192,6 +289,111 @@ class TPLN extends DB
 		return;
 	}
 
+
+    /**
+     * Get browser information
+     * @param string $u_agent (if empty user $_SERVER['HTTP_USER_AGENT'])
+     * @return array
+     */
+    public function getBrowserInfo($u_agent="")
+    {
+        if(empty($u_agent))$u_agent = @$_SERVER['HTTP_USER_AGENT'];
+
+        $bname = 'Unknown';
+        $platform = 'Unknown';
+        $version = "";
+
+        //First get the platform?
+        if (preg_match('/linux/i', $u_agent)) {
+            $platform = 'Linux';
+        }
+        elseif (preg_match('/macintosh|mac os x/i', $u_agent)) {
+            $platform = 'Mac';
+        }
+        elseif (preg_match('/Windows 95|Win95|Windows_95/i', $u_agent))$platform = 'Windows 95';
+        elseif (preg_match('/Windows 98|Win98/i', $u_agent))$platform = 'Windows 98';
+        elseif (preg_match('/Windows NT 5.0|Windows 2000/i', $u_agent))$platform = 'Windows 2000';
+        elseif (preg_match('/Windows NT 5.1|Windows xp/i', $u_agent))$platform = 'Windows XP';
+        elseif (preg_match('/Windows NT 5.2/i', $u_agent))$platform = 'Windows Server 2003';
+        elseif (preg_match('/Windows NT 5.2|Windows NT 6.0/i', $u_agent))$platform = 'Windows Vista';
+        elseif (preg_match('/Windows NT 6.1/i', $u_agent))$platform = 'Windows 7';
+        elseif (preg_match('/Windows NT 6.2/i', $u_agent))$platform = 'Windows 8';
+
+        elseif (preg_match('/windows|win32/i', $u_agent)) {
+            $platform = 'Windows';
+        }
+
+        // Next get the name of the useragent yes seperately and for good reason
+        if(preg_match('/MSIE/i',$u_agent) && !preg_match('/Opera/i',$u_agent))
+        {
+            $bname = 'Internet Explorer';
+            $ub = "MSIE";
+        }
+        elseif(preg_match('/Firefox/i',$u_agent))
+        {
+            $bname = 'Mozilla Firefox';
+            $ub = "Firefox";
+        }
+        elseif(preg_match('/Chrome/i',$u_agent))
+        {
+            $bname = 'Google Chrome';
+            $ub = "Chrome";
+        }
+        elseif(preg_match('/Safari/i',$u_agent))
+        {
+            $bname = 'Apple Safari';
+            $ub = "Safari";
+        }
+        elseif(preg_match('/Opera/i',$u_agent))
+        {
+            $bname = 'Opera';
+            $ub = "Opera";
+        }
+        elseif(preg_match('/Netscape/i',$u_agent))
+        {
+            $bname = 'Netscape';
+            $ub = "Netscape";
+        }
+
+        // finally get the correct version number
+        $known = array('Version', $ub, 'other');
+        $pattern = '#(?<browser>' . join('|', $known) .
+            ')[/ ]+(?<version>[0-9.|a-zA-Z.]*)#';
+        if (!preg_match_all($pattern, $u_agent, $matches)) {
+            // we have no matching number just continue
+        }
+
+        // see how many we have
+        $i = count($matches['browser']);
+        if ($i > 1) {
+            //we will have two since we are not using 'other' argument yet
+            //see if version is before or after the name
+            if (strripos($u_agent,"Version") < strripos($u_agent,$ub)){
+                $version= $matches['version'][0];
+            }
+            else {
+                $version= $matches['version'][1];
+            }
+        }
+        else {
+            $version= $matches['version'][0];
+        }
+
+        // check if we have a number
+        if($version==null || $version=="") {$version="?";}
+
+        return array(
+            'userAgent' => $u_agent,
+            'name'      => $bname,
+            'version'   => $version,
+            'platform'  => $platform,
+            'pattern'    => $pattern
+        );
+
+    }
+
+
+
 	/**
 	 * This method returns ip used.
 	 *
@@ -202,9 +404,9 @@ class TPLN extends DB
 		/*if(isset($_SERVER['HTTP_X_FORWARDED_FOR']))
 			$ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
 		else*/if(isset($_SERVER['HTTP_CLIENT_IP']))
-			$ip = $_SERVER['HTTP_CLIENT_IP'];
-		else
-			$ip = $_SERVER['REMOTE_ADDR'];
+		$ip = $_SERVER['HTTP_CLIENT_IP'];
+	else
+		$ip = $_SERVER['REMOTE_ADDR'];
 
 		return $ip;
 	}
@@ -266,21 +468,21 @@ class TPLN extends DB
 	protected function structItems()
 	{
 		$p_var = array('_UrlBng',
-				'_UrlPrev',
-				'_UrlNext',
-				'_UrlEnd',
-				'_UrlPageNav',
-				'_PageNumber',
-				'_PageCount',
-				'_First',
-				'_Last',
-				'_Count',
-				'_NavColor',
-				'_Chrono',
-				'_Logo',
-				'_Version',
-				'_Field',
-				'_QueryCount');
+			'_UrlPrev',
+			'_UrlNext',
+			'_UrlEnd',
+			'_UrlPageNav',
+			'_PageNumber',
+			'_PageCount',
+			'_First',
+			'_Last',
+			'_Count',
+			'_NavColor',
+			'_Chrono',
+			'_Logo',
+			'_Version',
+			'_Field',
+			'_QueryCount');
 
 		$tab = '<b>Variable(s) found:</b> '.count($this->f[$this->f_no]['items'])."<br>\n";
 
@@ -402,9 +604,9 @@ class TPLN extends DB
 		$err_msg = $_err["$err_no"];
 		$err_msg = str_replace(
 
-				array('[:FILE:]', '[:BLOC:]', '[:ITEM:]'),
-				array($file, $bloc, $item),
-				$err_msg);
+			array('[:FILE:]', '[:BLOC:]', '[:ITEM:]'),
+			array($file, $bloc, $item),
+			$err_msg);
 
 		$this->error_msg = "<B>TPLN error $err_no:</B> $err_msg";
 
@@ -418,7 +620,6 @@ class TPLN extends DB
 		$backtrace1 = array_reverse($backtrace1);
 		if(count($backtrace1) > 0)
 		{
-
 			$this->error_msg .= "<b>Stack</b>\n";
 			$this->error_msg .= "<pre style='border:1px solid #ccc; padding:5px;'>";
 
@@ -433,7 +634,7 @@ class TPLN extends DB
 				$init = true;
 			}
 
-			$this->error_msg .= "</pre>";
+			$this->error_msg .= "</pre>\n\n";
 		}
 
 		// assign use handler
@@ -458,7 +659,6 @@ class TPLN extends DB
 		$err_alert = TPLN_ERROR_ALERT;
 		$mail_admin = TPLN_MAIL_ADMIN;
 
-
 		if(($err_alert == 1 && !empty($mail_admin)) && (!isset($_GET['tpln_w']) || $_GET['tpln_w'] != 'adm'))
 		{
 			$request_url_simple = str_replace('?'.$_SERVER['QUERY_STRING'], '', $_SERVER['REQUEST_URI']);
@@ -470,24 +670,57 @@ class TPLN extends DB
 			else
 				$url .= '?'.$_SERVER['QUERY_STRING'].'&tpln_w=adm';
 
-			$subject = '[TPLN] Alert Error';
+            $subject = (defined('WEBSITE_PATH')) ? '[NUTS] Alert Error' : '[TPLN] Alert Error';
 
-			$err_msg = $this->error_msg;
+            $err_msg = $this->error_msg;
 			$err_msg = str_replace('&lt;', '<', $err_msg);
 			$err_msg = str_replace('&gt;', '>', $err_msg);
 
-			$body = date('[Y-m-d H:i] ')." TPLN has detected an error\n\n";
-			$body .= $err_msg.' in '.$_SERVER['SCRIPT_FILENAME']."\n\n\n";
-			$body .= "Url <a href=\"$url\">$url</a>\n";
+			$body = date('[Y-m-d H:i] ')." System has detected an error\n\n";
+			// $body .= $err_msg.' in '.$_SERVER['SCRIPT_FILENAME']."\n";
+            $body .= $err_msg."\n";
 
-			$body .= "===========================================\n";
-			$body .= 'TPLN version '.TPLN_VERSION."\n";
-			$body .= 'IP: '.$this->GetIP()." (<a href=\"http://www.geoiptool.com/en/?IP=".$this->GetIP()."\">information</a>)"."\n";
-			$body .= "Server: {$_SERVER['SERVER_NAME']} ({$_SERVER['SERVER_ADDR']})"."\n";
+			// $body .= "===========================================\n";
 
+            // add session stack if exists
+            if(isset($_SESSION) && count($_SESSION) > 0)
+            {
+                $body .= "\n<b>Session :</b>";
+                $body .= "<pre style='border:1px solid #ccc; padding:5px;'>".@print_r($_SESSION, true).'</pre>'."\n";
+            }
+            else
+            {
+                $body .= "\n\n";
+            }
 
+            $body .= "<b>Url :</b> <a href=\"$url\">$url</a>\n";
 
-			$body = str_replace("\n", "<br />", $body);
+            $body .= "<hr>";
+            $body .= '<b>IP :</b> '.$this->GetIP()." (<a href=\"http://www.geoiptool.com/en/?IP=".$this->GetIP()."\">information</a>)"."\n";
+            $body .= "<b>Server :</b> {$_SERVER['SERVER_NAME']} ({$_SERVER['SERVER_ADDR']})"."\n";
+            $referer = (isset($_SERVER['HTTP_REFERER'])) ? $this->clickable($_SERVER['HTTP_REFERER']) : '-';
+            $body .= "<b>Referer :</b> $referer"."\n";
+
+            $browser = $this->getBrowserInfo();
+            $body .= "<b>Browser :</b> ".@$browser['name'].' '.@$browser['version']."\n";
+            $body .= "<b>System :</b> ".@$browser['platform']."\n";
+            $body .= "<b>Agent :</b> ".@$_SERVER['HTTP_USER_AGENT']."\n";
+
+            if(defined('WEBSITE_PATH'))
+                $body .= '<b>Powered by Nuts Component TPLN v.'.TPLN_VERSION."</b>\n";
+            else
+                $body .= '<b>Powered by TPLN v.'.TPLN_VERSION."</b>\n";
+
+            $body = str_replace("\n", "<br />", $body);
+
+            // add trace mode for Nuts
+            if(defined('WEBSITE_PATH') && @$GLOBALS['nuts']->dbIsConnected())
+            {
+                xTrace('system-www', strip_tags($body));
+            }
+
+            $body = '<style type="text/css">* , body {font-family: \'Segoe UI\', arial; font-size: 12px;}</style>'.$body;
+
 
 			$headers = "MIME-Version: 1.0\n";
 			$headers .= "Content-type: text/html; charset=utf-8\n";
@@ -763,9 +996,9 @@ class TPLN extends DB
 		{
 			$this->f[$this->f_no]['buffer'] = str_replace(
 				array(
-						"<bloc::{$this->f[$this->f_no]['shortcut_blocs']['all'][$i]}>",
-						"</bloc::{$this->f[$this->f_no]['shortcut_blocs']['all'][$i]}>"
-					), '', $this->f[$this->f_no]['buffer']); // bloc before/after
+					"<bloc::{$this->f[$this->f_no]['shortcut_blocs']['all'][$i]}>",
+					"</bloc::{$this->f[$this->f_no]['shortcut_blocs']['all'][$i]}>"
+				), '', $this->f[$this->f_no]['buffer']); // bloc before/after
 		}
 	}
 
@@ -996,6 +1229,7 @@ class TPLN extends DB
 	 * @author H2LSOFT */
 	public function parseGlobals()
 	{
+
 		$this->f[$this->f_no]['php_items'] = $this->captureItems('', 'PHP');
 
 		if(count($this->f[$this->f_no]['php_items']) == 0)
@@ -1003,14 +1237,66 @@ class TPLN extends DB
 			return;
 		}
 
-		@extract($GLOBALS, EXTR_SKIP || EXTR_REFS);
+		// @extract($GLOBALS, EXTR_SKIP || EXTR_REFS);
 		foreach($this->f[$this->f_no]['php_items'] as $item)
 		{
 			$replace = '$'.$item;
-			//if(!eregi("\(", $replace)) // protection security of methods and functions !
-			if(strpos($replace, "(") === false) // protection security of methods and functions !
+			$tmp = '';
+			if(strpos($replace, "(") !== true) // protection security of methods and functions !
 			{
-				@eval("\$tmp = $replace;");
+
+				// patch security: 26/08/2015 !
+				preg_match_all("/\[([^\]]*)\]/s", $replace, $brakets);
+				if(count($brakets[1]) == 0)
+				{
+					// object detected $obj->attr
+					if(strpos($item, '->') !== false)
+					{
+						$v = explode('->', $item);
+						if(count($v) == 2 && isset($GLOBALS[$v[0]]))
+						{
+							$tmp = $GLOBALS[$v[0]]->{$v[1]};
+						}
+					}
+					else
+					{
+						if(isset($GLOBALS[$item]))
+							$tmp = $GLOBALS[$item];
+
+					}
+
+				}
+				elseif(count($brakets[1]) == 1)
+				{
+					$brakets[1][0] = str_replace(array('"', "'"), '', $brakets[1][0]);
+					$brakets[1][0] = trim($brakets[1][0]);
+
+					list($arr_name, ) = explode('[', $item);
+					if(isset($GLOBALS[$arr_name][$brakets[1][0]]))
+							$tmp = $GLOBALS[$arr_name][$brakets[1][0]];
+				}
+				elseif(count($brakets[1]) == 2)
+				{
+					$brakets[1][0] = trim(str_replace(array('"', "'"), '', $brakets[1][0]));
+					$brakets[1][1] = trim(str_replace(array('"', "'"), '', $brakets[1][1]));
+
+					list($arr_name, ) = explode('[', $item);
+					if(isset($GLOBALS[$arr_name][$brakets[1][0]][$brakets[1][1]]))
+							$tmp = $GLOBALS[$arr_name][$brakets[1][0]][$brakets[1][1]];
+				}
+
+				/*
+				@eval("
+						\$tmp = str_ireplace(array('<?php','<?','?>', '<%'), '', $replace);
+				");
+
+				if(strpos($replace, '$_GET') !== false || strpos($replace, '$_POST') !== false || strpos($replace, '$_COOKIE') !== false || strpos($replace, '$_SESSION') !== false)
+				{
+					$tmp = $this->xssProtect($tmp);
+				}
+				*/
+
+
 				$item = '$'.$item;
 				$item = str_replace('$', '\$', $item);
 				$item = str_replace('[', '\[', $item);
@@ -2108,11 +2394,12 @@ class TPLN extends DB
 			{
 				$m2 = $m;
 				preg_match_all('#\$([[:alnum:]|\_]*)#', $m, $ms);
+
 				if(count($ms) == 2)
 				{
 					foreach($ms[0] as $tm)
 					{
-						if(!empty($tm) && !in_array($tm, array('$_GET', '$_POST', '$_COOKIE', '$_SERVER', '$_SESSION', '$_REQUEST')))
+						if(!empty($tm) && !in_array($tm, array('$_GET', '$_POST', '$_COOKIE', '$_SERVER', '$_SESSION')))
 							$m2 = str_replace($tm, '$GLOBALS["'.str_replace('$','',$tm).'"]', $m);
 					}
 				}
@@ -2297,7 +2584,7 @@ class TPLN extends DB
 			else
 				$cur_path = join('.', $cur_arr);
 
-// definition of all the fathers
+			// definition of all the fathers
 			if(!$this->isDefined($cur_path, 'NOITEM'))
 			{
 				$this->savePath($cur_path);
@@ -2368,7 +2655,8 @@ class TPLN extends DB
 
 		if(get_magic_quotes_gpc())$string = stripslashes($string);
 
-		$string = str_replace(array("&lt;", "&gt;"), array("&amp;lt;", "&amp;gt;",), $string);
+		$string = str_ireplace(array("&lt;", "&gt;"), array("&amp;lt;", "&amp;gt;"), $string);
+		$string = str_ireplace(array("<?php", "<?", "<%", "?>"), '', $string);
 
 		// fix &entitiy\n;
 		$string = preg_replace('#(&\#*\w+)[\s\r\n]+;#U', "$1;", $string);
@@ -2422,7 +2710,6 @@ class TPLN extends DB
 	protected function parseLogo()
 	{
 		if($this->itemExists('_Logo')) // place the logo
-
 		{
 			$this->parse('_Logo', '<a href="http://tpln.sourceforge.net" title="Powered by TPLN template !"><img src="http://tpln.sourceforge.net/logo.gif" alt="made with TPLN Template!" border="0" target="_blank"  /></a>');
 		}
@@ -2750,9 +3037,10 @@ class TPLN extends DB
 	 * This method allows to convert http, www, ftp, mailto into clickable element
 	 *
 	 * @param string $ret
+	 * @param boolean $add_nofollow default false
 	 * @return string
 	 * @author H2LSOFT */
-	public function clickable($ret)
+	public function clickable($ret, $add_nofollow=false)
 	{
 		/*$str = eregi_replace("([_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)+)",
 							   "<a href=\"mailto:\\1\">\\1</a>", $str);
@@ -2763,11 +3051,12 @@ class TPLN extends DB
 		// matches an "xxxx://yyyy" URL at the start of a line, or after a space.
 		// xxxx can only be alpha characters.
 		// yyyy is anything up to the first space, newline, comma, double quote or <
-		$ret = preg_replace("#(^|[\n ])([\w]+?://[\w\#$%&~/.\-;:=,?@\[\]+]*)#is", "\\1<a href=\"\\2\" target=\"_blank\">\\2</a>", $ret);
+        $nofollow = ($add_nofollow) ? 'rel="nofollow"' : '';
+		$ret = preg_replace("#(^|[\n ])([\w]+?://[\w\#$%&~/.\-;:=,?@\[\]+]*)#is", "\\1<a href=\"\\2\" $nofollow target=\"_blank\">\\2</a>", $ret);
 
 		// matches an email@domain type address at the start of a line, or after a space.
 		// Note: Only the followed chars are valid; alphanums, "-", "_" and or ".".
-		$ret = preg_replace("#(^|[\n ])([a-z0-9&\-_.]+?)@([\w\-]+\.([\w\-\.]+\.)*[\w]+)#i", "\\1<a href=\"mailto:\\2@\\3\">\\2@\\3</a>", $ret);
+		$ret = preg_replace("#(^|[\n ])([a-z0-9&\-_.]+?)@([\w\-]+\.([\w\-\.]+\.)*[\w]+)#i", "\\1<a href=\"mailto:\\2@\\3\" $nofollow>\\2@\\3</a>", $ret);
 
 		// matches a "www|ftp.xxxx.yyyy[/zzzz]" kinda lazy URL thing
 		// Must contain at least 2 dots. xxxx contains either alphanum, or "-"
@@ -2785,5 +3074,3 @@ class TPLN extends DB
 	}
 }
 
-
-?>
