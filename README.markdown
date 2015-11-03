@@ -17,7 +17,7 @@ to permit to separate work between webdesigner and PHP coder your work is built 
 #### Installation :
 
     1. Copy TPLN dir in your project
-    2. Edit file TPLN/TPLN_cfg.php
+    2. Edit file TPLN/config.inc.php
 
 
 #### Official website, online examples, forum and documentation :
