@@ -8,12 +8,9 @@ to permit to separate work between webdesigner and PHP coder your work is built 
 #### Hot Features :
 
     -  Easy to learn
-    -  Open source project
-    -  Powerful Plugin system (DB Pager, Captcha, Forms, Cache, Rss, Mail, Image)
-    -  Database Abstraction layer via PDO (MySQL, Oracle, SQL Server...)
-    -  Full Documentation, Friendly Community, ...
-
-
+    -  Fast
+    - Support imbricated blocs, conditionnal, loop, automatic form error catcher
+    
 #### Installation :
 
     1. Copy TPLN dir in your project
