@@ -9,7 +9,7 @@ to permit to separate work between webdesigner and PHP coder your work is built 
 
     -  Easy to learn
     -  Fast
-    - Support imbricated blocs, conditionnal, loop, automatic form error catcher
+    -  Support imbricated blocs, conditionnal, loop, automatic form error catcher
     
 #### Installation :
 
