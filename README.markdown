@@ -22,6 +22,6 @@ to permit to separate work between webdesigner and PHP coder your work is built 
 
 [http://tpln.h2lsoft.com](http://tpln.h2lsoft.com "Official website")
 
-#### Bug tracker
+#### Bug tracker / Suggestion
 
 [https://github.com/h2lsoft/tpln-template-engine/issues](https://github.com/h2lsoft/tpln-template-engine/issues "Submit a bug / suggestion")
