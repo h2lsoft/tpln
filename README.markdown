@@ -18,7 +18,10 @@ to permit to separate work between webdesigner and PHP coder your work is built 
         https://github.com/h2lsoft/tpln-template-engine/archive/master.zip
     
 
-#### Official website, online examples, forum and documentation :
+#### Official website, online examples, documentation :
 
 [http://tpln.h2lsoft.com](http://tpln.h2lsoft.com "Official website")
 
+#### Bug tracker
+
+[https://github.com/h2lsoft/tpln-template-engine/issues](https://github.com/h2lsoft/tpln-template-engine/issues "Submit a bug / suggestion")
