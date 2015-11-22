@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Ajax bloc</title>
+	<meta charset="utf-8">
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+	<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+</head>
+<body>
+
+	<div class="container">
+
+		<h1>Ajax bloc</h1>
+
+		<input id="btn" type="button" value="Click to get bloc ajax">
+
+		<div style="display: none">
+
+			<!-- ajax::content -->
+			I'm the content of the ajax bloc !
+			<!-- /ajax::content -->
+
+		</div>
+
+	</div>
+
+
+	<script>
+	$('#btn').click(function(){
+
+		$.get('?ajax=1', function(response){
+			alert(response);
+		});
+
+	});
+	</script>
+
+
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Parsing recursive</title>
+	<meta charset="utf-8">
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+	<div class="container">
+
+		<h1>Parsing recursive</h1>
+
+		<bloc::family>
+		<div class="bloc family">
+
+			{_number}. Family {lastname}
+
+			<ul class="children">
+
+				<bloc::children>
+				<li>{_number}. {firstname} {lastname}</li>
+				</bloc::children>
+
+			</ul>
+
+		</div>
+		</bloc::family>
+
+	</div>
+</body>
+</html>

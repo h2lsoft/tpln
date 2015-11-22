@@ -1,0 +1,7 @@
+{
+    "name": "h2lsoft/Tpln-Template-engine",
+    "description": "TPLN is a fast php template engine (include form error catcher)",
+    "require": {
+        "php": ">=5.3.0"
+    }
+}

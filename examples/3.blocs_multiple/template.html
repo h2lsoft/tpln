@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Multiple blocs</title>
+	<meta charset="utf-8">
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+	<style type="text/css">
+	.bloc {padding: 20px; margin-bottom: 10px;}
+	.level_1 {background-color: cadetblue;}
+	.level_2 {background-color: lightcoral;}
+	.level_3 {background-color: lightyellow;}
+	</style>
+</head>
+<body>
+
+	<div class="container">
+
+		<h1>Multiple blocs example</h1>
+		<div class="alert alert-warning">Reload page for random</div>
+
+		<bloc::level_1>
+		<div class="bloc level_1">
+			level 1: {text}
+
+			<bloc::level_2>
+			<div class="bloc level_2">
+				level 2: {text}
+
+				<bloc::level_3>
+				<div class="bloc level_3">
+					level 3: {text}
+				</div>
+				</bloc::level_3>
+
+			</div>
+			</bloc::level_2>
+
+		</div>
+		</bloc::level_1>
+
+
+	</div>
+</body>
+</html>

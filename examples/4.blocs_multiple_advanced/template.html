@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Multiple blocs advanced</title>
+	<meta charset="utf-8">
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+	<style type="text/css">
+	.bloc {padding: 10px; margin-bottom: 10px;}
+	.family {border:1px solid cadetblue; font-weight:bold; font-size:16px; }
+	.children {margin-left: 10px; margin-top: 10px; font-size: medium; font-weight: normal; background-color: white;}
+	</style>
+</head>
+<body>
+
+	<div class="container">
+
+		<h1>Multiple blocs advanced example with dynamic sub blocs</h1>
+
+		<bloc::family>
+		<div class="bloc family">
+
+			Family {lastname}: {children_count} children(s)
+
+			<ul class="children">
+				<bloc::children>
+				<li>{firstname} {lastname}</li>
+				</bloc::children>
+			</ul>
+
+		</div>
+		</bloc::family>
+
+
+	</div>
+</body>
+</html>

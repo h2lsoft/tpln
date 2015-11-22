@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Bloc</title>
+	<meta charset="utf-8">
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+	<div class="container">
+
+		<h1>Bloc example</h1>
+		<table class="table table-bordered">
+		<thead>
+			<tr>
+				<th>Fistname</th>
+				<th>Lastname</th>
+			</tr>
+		</thead>
+		<tbody>
+			<bloc::users>
+			<tr>
+				<td>{firstname}</td>
+				<td>{lastname}</td>
+			</tr>
+			</bloc::users>
+		</tbody>
+		</table>
+
+	</div>
+
+</body>
+</html>

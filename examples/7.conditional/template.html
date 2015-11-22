@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Conditional command</title>
+	<meta charset="utf-8">
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+	<style type="text/css">
+	img {max-height: 350px;}
+	</style>
+</head>
+<body>
+
+	<div class="container">
+
+		<h1>Conditional command</h1>
+		<div class="alert alert-warning">Reload page for random image</div>
+
+		{ @if($GLOBALS['model'] == 'Fiat 500') }
+			<img src="http://www.fiat.fr/resources/img/cars/500/allestimenti/540x324_500_lounge.jpg">
+		{ @elseif($GLOBALS['model'] == 'Mercedes class A') }
+			<img src="http://i.f1g.fr/media/ext/orig/www.lefigaro.fr/medias/2013/06/24/PHOc950ea8a-dfc0-11e2-bf56-22d2e2e8741f-805x453.jpg">
+		{ @else }
+			<img src="http://www.coloriez.com/images/coloriage/cars/coloriage-cars-3529.jpg">
+		{ @endif }
+
+	</div>
+</body>
+</html>
