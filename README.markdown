@@ -13,7 +13,8 @@ to permit to separate work between webdesigner and PHP coder your work is built 
     
 #### Installation :
 
-    - via composer 
+    - via composer require h2lsoft/TPLN-Php-Template
+    - or simply unzip in your web root directory => https://github.com/h2lsoft/TPLN-Php-Template/archive/master.zip
     
 
 #### Official website, online examples, forum and documentation :

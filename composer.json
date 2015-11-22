@@ -1,6 +1,15 @@
 {
     "name": "h2lsoft/Tpln-Template-engine",
     "description": "TPLN is a fast php template engine (include form error catcher)",
+    "homepage":"http://tpln.h2lsoft.com",
+    "type": "library",
+    "keywords": ["php","template","engine","mvc"],
+    "license":"MIT",
+    "authors":[
+        {
+            "name":"H2LSOFT"
+        }
+    ],
     "require": {
         "php": ">=5.3.0"
     }
