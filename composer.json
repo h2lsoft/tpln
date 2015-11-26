@@ -1,5 +1,5 @@
 {
-    "name": "h2lsoft/tpln-template-engine",
+    "name": "h2lsoft/tpln",
     "description": "TPLN is a fast php template engine (include form error catcher)",
     "homepage":"http://tpln.h2lsoft.com",
     "type": "library",
