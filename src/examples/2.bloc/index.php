@@ -2,7 +2,7 @@
 
 include('../header.inc.php');
 
-$tpln = new Tpln_Engine();
+$tpln = new Tpln\Engine();
 
 $tpln->open('template.html');
 

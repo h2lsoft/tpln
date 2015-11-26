@@ -4,20 +4,21 @@
  *
  * @author H2LSOFT
  * @website http://tpln.h2lsoft.com
- * @license LGPL
+ * @license MIT
  * @version 5.0
  * @package Template Engine
  */
 
-// @todo> doclet
+namespace Tpln;
 
+use \Tpln\Form;
 
 // includes
 define('TPLN_PATH', dirname(__FILE__));
 
 include_once(__DIR__.'/lang/form_error.inc.php');
 include_once(__DIR__.'/TPLN_Form.php');
-class Tpln_Engine extends TPLN_Form
+class Engine extends Form
 {
 	private $lang = 'en';
 	private $stack;
@@ -89,7 +90,7 @@ class Tpln_Engine extends TPLN_Form
 	public function setTemplateBuffer($buffer, $file='virtual')
 	{
 		// register
-		$this->stack[++$this->tpl_index] = new stdClass();
+		$this->stack[++$this->tpl_index] = new \stdClass();
 
 		$this->t = &$this->stack[$this->tpl_index];
 		$this->t->dir = basename($file);
@@ -190,7 +191,7 @@ class Tpln_Engine extends TPLN_Form
 				// capture bloc
 				$pattern = "/<bloc::$bloc_name>(.*)?<\\/bloc::$bloc_name>/msU";
 				$match = preg_match_all($pattern, $this->t->buffer, $tab);
-				$this->t->blocs[$bloc_name] = new stdClass();
+				$this->t->blocs[$bloc_name] = new \stdClass();
 				$this->t->blocs[$bloc_name]->original = $tab[1][0];
 				$this->t->blocs[$bloc_name]->parsed = $tab[1][0];
 				$this->t->blocs[$bloc_name]->childrens = array();
@@ -531,7 +532,7 @@ class Tpln_Engine extends TPLN_Form
 
 			if(!isset($b->childrens[$bloc]))
 			{
-				$b->childrens[$bloc] = new stdClass();
+				$b->childrens[$bloc] = new \stdClass();
 				$b->childrens[$bloc]->path = $path;
 				$b->childrens[$bloc]->parsed = $this->t->blocs[$bloc]->original;
 				$b->childrens[$bloc]->childrens = array();

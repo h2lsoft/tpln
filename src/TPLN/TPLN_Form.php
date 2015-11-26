@@ -1,6 +1,8 @@
 <?php
 
-class TPLN_Form
+namespace Tpln;
+
+class Form
 {
 	protected $formLang = 'en';
 	private $formErrorCssClass = 'error';
@@ -531,7 +533,7 @@ class TPLN_Form
 
 		if(!empty($_POST[$name]))
 		{
-			$d = DateTime::createFromFormat($format, $_POST[$name]);
+			$d = \DateTime::createFromFormat($format, $_POST[$name]);
 			if(!$d || $d->format($format) != $_POST[$name])
 			{
 				$msg = $this->_getErrorMsg(14, array($name, $format), $custom_message);
