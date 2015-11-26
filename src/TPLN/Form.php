@@ -12,7 +12,6 @@ class Form
 	private $formErrorStack = array();
 	private $formValues = array();
 
-
 	/**
 	 * Initialize form with value and apply xss
 	 *

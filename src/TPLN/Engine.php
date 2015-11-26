@@ -11,14 +11,12 @@
 
 namespace Tpln;
 
-use \Tpln\Form;
-
 // includes
 define('TPLN_PATH', dirname(__FILE__));
 
 include_once(__DIR__.'/lang/form_error.inc.php');
 include_once(__DIR__.'/TPLN_Form.php');
-class Engine extends Form
+class Engine extends \Tpln\Form
 {
 	private $lang = 'en';
 	private $stack;
