@@ -9,14 +9,12 @@
  * @package Template Engine
  */
 
-namespace Tpln;
-
 // includes
 define('TPLN_PATH', dirname(__FILE__));
 
 include_once(__DIR__.'/lang/form_error.inc.php');
-include_once(__DIR__.'/TPLN_Form.php');
-class Engine extends \Tpln\Form
+include_once(__DIR__.'/Form.php');
+class Tpln_Engine extends Tpln_Form
 {
 	private $lang = 'en';
 	private $stack;

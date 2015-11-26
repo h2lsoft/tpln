@@ -11,12 +11,12 @@
         }
     ],
     "require": {
-        "php": ">=5.4.0"
+        "php": ">=5.2.7"
     },
 
     "autoload": {
-        "psr-4": {
-            "Tpln\\": "src/TPLN/"
+        "psr-0": {
+            "Tpln_" : "lib/"
         }
     }
 

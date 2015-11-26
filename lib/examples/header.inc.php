@@ -2,4 +2,4 @@
 
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
-include('../../TPLN/Engine.php');
+include(__DIR__.'/../Tpln/Engine.php');

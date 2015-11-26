@@ -1,8 +1,7 @@
 <?php
 
-namespace Tpln;
 
-class Form
+class Tpln_Form
 {
 	protected $formLang = 'en';
 	private $formErrorCssClass = 'error';
