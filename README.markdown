@@ -13,7 +13,8 @@ to permit to separate work between webdesigner and PHP coder your work is built 
     
 #### Installation :
 
-    - via composer require h2lsoft/tpln-template-engine
+    - via composer require h2lsoft/tpln
+    
     - or simply unzip in your web root directory => 
         https://github.com/h2lsoft/tpln/archive/master.zip
     
