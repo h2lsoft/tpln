@@ -16,7 +16,7 @@
 
     "autoload": {
         "psr-4": {
-            "Tpln\\": "src/"
+            "Tpln\\": "src/TPLN/"
         }
     }
 }
