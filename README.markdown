@@ -19,7 +19,7 @@ to permit to separate work between webdesigner and PHP coder your work is built 
         https://github.com/h2lsoft/tpln/archive/master.zip
     
 
-#### Official website, online examples, documentation :
+#### Official website, examples, documentation :
 
 [http://tpln.h2lsoft.com](http://tpln.h2lsoft.com "Official website")
 
