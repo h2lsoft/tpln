@@ -5,9 +5,11 @@
     "type": "library",
     "keywords": ["php","template","engine","mvc"],
     "license":"MIT",
+
     "authors":[
         {
-            "name":"H2LSOFT"
+            "name":"H2LSOFT",
+            "homepage":"http://tpln.h2lsoft.com"
         }
     ],
     "require": {
